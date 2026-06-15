@@ -85,6 +85,7 @@ img { -webkit-user-drag: none; }
 .mode-text b { font-size: 1.3em; }
 .mode-text small { opacity: .65; font-size: .95em; }
 .mode-review { background: linear-gradient(135deg,#fff,#fff7da); }
+.mode-tap    { background: linear-gradient(135deg,#fff,#ffe9f1); }
 .mode-listen { background: linear-gradient(135deg,#fff,#e2f6ff); }
 .mode-look  { background: linear-gradient(135deg,#fff,#eafbe6); }
 
@@ -162,6 +163,24 @@ img { -webkit-user-drag: none; }
   padding: 10px 22px; border-radius: 999px; box-shadow: 0 5px 0 #3aa9cb;
 }
 .prompt-speak:active { transform: translateY(4px); box-shadow: 0 1px 0 #3aa9cb; }
+.prompt-speak.big { font-size: 1.4em; padding: 16px 34px; }
+
+/* ปุ่มยืนยันคำตอบ (โหมดแตะรูป) */
+.game-action { text-align: center; padding: 4px 0; min-height: 10px; }
+.confirm-btn {
+  border: none; cursor: pointer; font-family: inherit;
+  background: linear-gradient(135deg, var(--green), #5ab14f); color: #fff;
+  font-size: 1.5em; font-weight: 800; padding: 16px 48px; border-radius: 999px;
+  box-shadow: 0 6px 0 #3f8d36; transition: transform .12s;
+}
+.confirm-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #3f8d36; }
+.confirm-btn:disabled { background: #d7d2de; color: #fff; box-shadow: 0 6px 0 #bdb8c6; cursor: default; opacity: .8; }
+
+/* รูปที่ถูกแตะเลือก (ยังไม่ยืนยัน) */
+.choice { position: relative; }
+.choice.selected { border-color: var(--blue); background: #eaf6ff; transform: scale(1.04); box-shadow: 0 0 0 4px rgba(92,200,232,.35), var(--shadow); }
+.choice-ear { position: absolute; top: 6px; right: 8px; font-size: 1.3em; opacity: .25; }
+.choice.selected .choice-ear { opacity: 1; }
 
 .game-choices { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; flex: 1; align-content: center; }
 .choice {

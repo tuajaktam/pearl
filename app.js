@@ -160,9 +160,27 @@ function renderRound() {
 
   const prompt = $("#game-prompt");
   const choiceBox = $("#game-choices");
+  const actionBox = $("#game-action");
   choiceBox.innerHTML = "";
+  actionBox.innerHTML = "";
+  state.selected = null;
 
-  if (g.mode === "listen") {
+  if (g.mode === "confirm") {
+    // 🖐️ ฟังเสียง -> แตะรูปเพื่อฟัง -> กดยืนยัน (ไม่ต้องอ่าน)
+    prompt.innerHTML = `<div class="prompt-q">ฟังเสียง แล้วแตะรูปที่ใช่ 👂</div>
+      <button class="prompt-speak big" id="prompt-speak">🔊 ฟังคำอีกครั้ง</button>`;
+    $("#prompt-speak").onclick = () => speak(target.zh);
+    choices.forEach((w) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.innerHTML = `<img src="${w.img}" alt="${w.th}"><span class="choice-ear">👂</span>`;
+      b.onclick = () => selectChoice(b, w);
+      choiceBox.appendChild(b);
+    });
+    actionBox.innerHTML = `<button class="confirm-btn" id="confirm-btn" disabled>ตอบ ✓</button>`;
+    $("#confirm-btn").onclick = () => confirmAnswer(target);
+    setTimeout(() => speak(target.zh), 350);
+  } else if (g.mode === "listen") {
     // ฟังเสียง -> เลือกรูป
     prompt.innerHTML = `<div class="prompt-q">แตะปุ่มฟัง แล้วเลือกรูปให้ถูก 🔊</div>
       <div class="prompt-hanzi">${target.zh}</div>
@@ -196,34 +214,71 @@ function buildChoices(target) {
   return shuffle([target, ...wrong]);
 }
 let locked = false;
+
+// แตะรูปเพื่อเลือก + ฟังเสียงของรูปนั้น (โหมด confirm)
+function selectChoice(btn, picked) {
+  if (locked) return;
+  $$("#game-choices .choice").forEach((c) => c.classList.remove("selected"));
+  btn.classList.add("selected");
+  state.selected = { btn, word: picked };
+  speak(picked.zh); // ให้เด็กได้ยินว่ารูปนี้พูดว่าอะไร
+  sfx.pop();
+  const cb = $("#confirm-btn");
+  if (cb) cb.disabled = false;
+}
+
+// กดปุ่มยืนยันคำตอบ (โหมด confirm)
+function confirmAnswer(target) {
+  if (locked || !state.selected) return;
+  const { btn, word } = state.selected;
+  if (word.id === target.id) {
+    handleCorrect(btn, target);
+  } else {
+    handleWrong(btn);
+    btn.classList.remove("selected");
+    state.selected = null;
+    const cb = $("#confirm-btn");
+    if (cb) cb.disabled = true;
+  }
+}
+
+// เลือกรูป/คำแล้วตัดสินทันที (โหมด listen / look)
 function answer(btn, picked, target) {
   if (locked) return;
+  if (picked.id === target.id) handleCorrect(btn, target);
+  else handleWrong(btn);
+}
+
+function handleCorrect(btn, target) {
+  locked = true;
   const g = state.game;
-  if (picked.id === target.id) {
-    locked = true;
-    btn.classList.add("correct");
-    sfx.good();
-    speak(target.zh);
-    const fb = $("#game-feedback");
-    fb.textContent = pickPraise();
-    fb.classList.add("good");
-    burstConfetti();
-    g.stars++;
-    $("#game-stars").textContent = "⭐".repeat(g.stars);
-    setTimeout(() => {
-      locked = false;
-      g.pos++;
-      if (g.pos >= g.total) finishGame();
-      else renderRound();
-    }, 1300);
-  } else {
-    btn.classList.add("wrong");
-    sfx.wrong();
-    const fb = $("#game-feedback");
-    fb.textContent = "ลองอีกครั้งนะ 💪";
-    fb.className = "game-feedback bad";
-    setTimeout(() => { btn.classList.remove("wrong"); }, 500);
-  }
+  btn.classList.remove("wrong", "selected");
+  btn.classList.add("correct");
+  sfx.good();
+  speak(target.zh);
+  const fb = $("#game-feedback");
+  fb.textContent = pickPraise();
+  fb.className = "game-feedback good";
+  const cb = $("#confirm-btn");
+  if (cb) cb.disabled = true;
+  burstConfetti();
+  g.stars++;
+  $("#game-stars").textContent = "⭐".repeat(g.stars);
+  setTimeout(() => {
+    locked = false;
+    g.pos++;
+    if (g.pos >= g.total) finishGame();
+    else renderRound();
+  }, 1300);
+}
+
+function handleWrong(btn) {
+  btn.classList.add("wrong");
+  sfx.wrong();
+  const fb = $("#game-feedback");
+  fb.textContent = "ลองอีกครั้งนะ 💪";
+  fb.className = "game-feedback bad";
+  setTimeout(() => { btn.classList.remove("wrong"); }, 500);
 }
 const PRAISE = ["เก่งมาก! 🎉", "ถูกต้อง! 👏", "สุดยอด! ⭐", "หนูเก่งจัง! 🌟", "ยอดเยี่ยม! 🥳"];
 function pickPraise() { return PRAISE[Math.floor(Math.random() * PRAISE.length)]; }
@@ -299,7 +354,7 @@ function bind() {
   $("#fc-speak").onclick = () => { audioCtx(); speakCard(); };
   $("#rv-prev").onclick = () => { if (state.reviewIndex > 0) { sfx.pop(); state.reviewIndex--; renderCard(); } };
   $("#rv-next").onclick = () => { if (state.reviewIndex < state.words.length - 1) { sfx.pop(); state.reviewIndex++; renderCard(); } };
-  $("#rv-play").onclick = () => { audioCtx(); sfx.pop(); startGame("listen"); };
+  $("#rv-play").onclick = () => { audioCtx(); sfx.pop(); startGame("confirm"); };
   $("#done-again").onclick = () => { sfx.pop(); startGame(state.game.mode); };
 }
 
