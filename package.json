@@ -6,5 +6,8 @@
   "dependencies": {
     "mupdf": "^1.27.0",
     "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.1"
   }
 }
