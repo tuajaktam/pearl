@@ -1,0 +1,10 @@
+{
+  "name": "chinese-vocab-game",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "mupdf": "^1.27.0",
+    "pngjs": "^7.0.0"
+  }
+}
